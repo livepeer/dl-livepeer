@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "description": "Download go-livepeer automatically",
   "author": "iameli",
-  "main": "download-livepeer.js",
+  "main": "dl-livepeer.js",
   "bin": {
     "dl-livepeer": "dl-livepeer.js"
   },

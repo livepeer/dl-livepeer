@@ -83,13 +83,18 @@ const run = async ({ out, branch }) => {
       cwd: tmpDir
     });
   }
-  const dirs = (await fs.readdir(tmpDir, { withFileTypes: true })).filter(
-    dirent => dirent.isDirectory()
-  );
+  const dirs = [];
+  for (const maybeDir of await fs.readdir(tmpDir)) {
+    const fullMaybeDir = path.resolve(tmpDir, maybeDir);
+    const stats = await fs.stat(fullMaybeDir);
+    if (stats.isDirectory()) {
+      dirs.push(fullMaybeDir);
+    }
+  }
   if (dirs.length === 0) {
     throw new Error("error: extracted directory not found");
   }
-  const extractedDir = path.resolve(tmpDir, dirs[0].name);
+  const extractedDir = dirs[0];
   if (dirs.length > 2) {
     console.warn(
       `More than one output directory found?! Using ${extractedDir}`
