@@ -1,4 +1,5 @@
-const https = require("https");
+#!/usr/bin/env node
+
 const fs = require("fs-extra");
 const path = require("path");
 const fetch = require("isomorphic-fetch");
