@@ -4,13 +4,35 @@ const path = require("path");
 const fetch = require("isomorphic-fetch");
 const os = require("os");
 const tar = require("tar");
+const yargs = require("yargs");
+const uuid = require("uuid/v4");
 
-(async () => {
+const argv = yargs
+  .usage(`go-livepeer prebuilt binary downloader script`)
+  .env("LP_")
+  .strict(true)
+  .options({
+    out: {
+      describe: "directory to save",
+      default: process.cwd(),
+      type: "string",
+      alias: "o"
+    },
+    branch: {
+      describe: "branch of go-livepeer you want to download",
+      default: "master",
+      tyoe: "string",
+      alias: "b"
+    }
+  })
+  .help().argv;
+
+const run = async ({ out, branch }) => {
   const branchRes = await fetch(
-    "https://api.github.com/repos/livepeer/go-livepeer/git/refs/heads/master"
+    `https://api.github.com/repos/livepeer/go-livepeer/git/refs/heads/${branch}`
   );
   const versionRes = await fetch(
-    "https://raw.githubusercontent.com/livepeer/go-livepeer/master/VERSION"
+    `https://raw.githubusercontent.com/livepeer/go-livepeer/${branch}/VERSION`
   );
   const branchInfo = await branchRes.json();
   const version = await versionRes.text();
@@ -32,8 +54,8 @@ const tar = require("tar");
   }
   // Account for possible "-dirty" suffix
   let successfulRes;
-  const outputDir = path.resolve(os.tmpdir(), `livepeer-${fullVersion}`);
-  await fs.ensureDir(outputDir);
+  const tmpDir = path.resolve(os.tmpdir(), `livepeer-${fullVersion}`, uuid());
+  await fs.ensureDir(tmpDir);
   for (const versionString of [fullVersion, `${fullVersion}-dirty`]) {
     const url = `https://build.livepeer.live/${versionString}/${filename}`;
     const res = await fetch(url);
@@ -49,24 +71,24 @@ const tar = require("tar");
     console.error(`Couldn't find ${fullVersion}. Perhaps it hasn't built yet?`);
     process.exit(1);
   }
-  const outputFile = path.resolve(outputDir, filename);
+  const outputFile = path.resolve(tmpDir, filename);
   successfulRes.body.pipe(fs.createWriteStream(outputFile));
   await new Promise(r => successfulRes.body.on("end", r));
-  console.error(`Downloaded to ${outputFile}`);
-  const finalOutputDir = path.resolve(os.homedir(), "bin");
+  // console.error(`Downloaded to ${outputFile}`);
+  await fs.ensureDir(out);
   if (outputFile.endsWith(".tar.gz")) {
     await tar.extract({
       file: outputFile,
-      cwd: outputDir
+      cwd: tmpDir
     });
   }
-  const dirs = (await fs.readdir(outputDir, { withFileTypes: true })).filter(
+  const dirs = (await fs.readdir(tmpDir, { withFileTypes: true })).filter(
     dirent => dirent.isDirectory()
   );
   if (dirs.length === 0) {
     throw new Error("error: extracted directory not found");
   }
-  const extractedDir = path.resolve(outputDir, dirs[0].name);
+  const extractedDir = path.resolve(tmpDir, dirs[0].name);
   if (dirs.length > 2) {
     console.warn(
       `More than one output directory found?! Using ${extractedDir}`
@@ -74,17 +96,16 @@ const tar = require("tar");
   }
   const extractedFiles = await fs.readdir(extractedDir);
   for (const file of extractedFiles) {
-    const finalFile = path.resolve(process.cwd(), file);
-    await fs.move(path.resolve(extractedDir, file), finalFile);
+    const finalFile = path.resolve(out, file);
+    await fs.move(path.resolve(extractedDir, file), finalFile, {
+      overwrite: true
+    });
     console.error(`Wrote ${finalFile}`);
   }
-  await fs.remove(outputDir);
-})();
+  await fs.remove(tmpDir);
+};
 
-// const file = fs.createWriteStream("file.jpg");
-// const request = https.get(
-//   "http://i3.ytimg.com/vi/J---aiyznGQ/mqdefault.jpg",
-//   function(response) {
-//     response.pipe(file);
-//   }
-// );
+run(argv).catch(err => {
+  console.error(err);
+  process.exit(1);
+});
