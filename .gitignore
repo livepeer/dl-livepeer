@@ -1,6 +1,6 @@
 node_modules
 yarn-error.log
-/livepeer$
-/livepeer_cli$
+/livepeer
+/livepeer_cli
 *.tar.gz
 *.zip
