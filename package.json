@@ -1,0 +1,13 @@
+{
+  "name": "download-livepeer",
+  "version": "0.0.1",
+  "description": "Download Livepeer automatically",
+  "main": "index.js",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "fs-extra": "^8.1.0",
+    "isomorphic-fetch": "^2.2.1",
+    "tar": "^4.4.13"
+  }
+}
