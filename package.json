@@ -1,6 +1,6 @@
 {
   "name": "dl-livepeer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Download go-livepeer automatically",
   "author": "iameli",
   "main": "dl-livepeer.js",
