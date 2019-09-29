@@ -1,11 +1,11 @@
 {
-  "name": "download-livepeer",
+  "name": "dl-livepeer",
   "version": "0.0.1",
   "description": "Download go-livepeer automatically",
   "author": "iameli",
   "main": "download-livepeer.js",
   "bin": {
-    "download-livepeer": "download-livepeer.js"
+    "dl-livepeer": "dl-livepeer.js"
   },
   "license": "MIT",
   "private": false,
